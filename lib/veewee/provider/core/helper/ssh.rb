@@ -70,11 +70,19 @@ module Veewee
 
             Net::SSH.start( host,options[:user],options ) do |ssh|
               ui.info "Transferring #{filename} to #{destination} "
-              ssh.scp.upload!( filename, "#{destination}.t" ) do |ch, name, sent, total|
+              if destination[-3,3] == 'iso'
+                dest2 = destination
+              else
+                dest2 = "#{destination}.t"
+              end
+              ssh.scp.upload!( filename, "#{dest2}" ) do |ch, name, sent, total|
                 #   print "\r#{destination}: #{(sent.to_f * 100 / total.to_f).to_i}%"
                 env.ui.info ".",{:new_line => false , :prefix => false}
               end
-              ssh.exec! "tr -d '\r' < #{destination}.t > #{destination} && rm -f #{destination}.t"
+              if dest2 != destination
+                ui.info "Remove CR from #{dest2} then create #{destination} "
+                ssh.exec! "tr -d '\r' < #{dest2} > #{destination} && rm -f #{dest2}"
+              end
             end
             ui.info "", {:prefix => false}
           end
