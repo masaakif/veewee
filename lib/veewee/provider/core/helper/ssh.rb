@@ -70,10 +70,11 @@ module Veewee
 
             Net::SSH.start( host,options[:user],options ) do |ssh|
               ui.info "Transferring #{filename} to #{destination} "
-              ssh.scp.upload!( filename, destination ) do |ch, name, sent, total|
+              ssh.scp.upload!( filename, "#{destination}.t" ) do |ch, name, sent, total|
                 #   print "\r#{destination}: #{(sent.to_f * 100 / total.to_f).to_i}%"
                 env.ui.info ".",{:new_line => false , :prefix => false}
               end
+              ssh.exec! "tr -d '\r' < #{destination}.t > #{destination} && rm -f #{destination}.t"
             end
             ui.info "", {:prefix => false}
           end
